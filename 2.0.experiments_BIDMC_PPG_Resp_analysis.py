@@ -3,7 +3,7 @@ import os
 import pickle
 from src.signal_modifier import *
 from src.similarity_estimator import *
-from src.functions import max_min_scaler
+from src.functions import max_min_scaler, find_signal_peaks
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 import random
@@ -52,7 +52,7 @@ class PhysioNet_dataset_processing():
             data = pd.read_csv(os.path.join(root_data_folder, file), index_col=None)
             data.columns = [col.strip() for col in data.columns]
             num_segments = len(data) // max_samples
-            print(f"{file} size: {data.shape[0]}")
+            print(f"File: {file} size: {data.shape[0]}")
 
             columns = data.columns.tolist()
             for column in columns:
@@ -75,7 +75,7 @@ class PhysioNet_dataset_processing():
                                    }
                         saving_folder = self.save_data_folder + column + "/"
                         if not os.path.exists(saving_folder):
-                            os.mkdir(saving_folder)
+                            os.makedirs(saving_folder)
                         filename = saving_folder + subject_id + "_" + str("{0:04d}".format(i)) + ".pkl"
                         with open(filename, 'wb') as f:
                             pickle.dump(content, f)
@@ -123,7 +123,7 @@ class PhysioNet_dataset_processing():
         """
         if save_modified:
             if not os.path.exists(modified_dataset_folder):
-                os.mkdir(modified_dataset_folder)
+                os.makedirs(modified_dataset_folder)
 
         raw_files = [file for file in os.listdir(raw_dataset_folder) if file.endswith('.pkl')]
         for i, file_name in enumerate(raw_files):
@@ -131,7 +131,7 @@ class PhysioNet_dataset_processing():
             #load data, normalize, find anchor point
             x, y = self.dataloader(raw_dataset_folder + file_name)
             x_peaks = find_signal_peaks(y)
-            print(x_peaks)
+            print("signal peaks: ", x_peaks)
             x_peaks_dist = [abs(x_peak - len(y) // 2) for x_peak in x_peaks]
             if len(x_peaks_dist)>0:
                 x_anchor_id = x_peaks[np.argmin(x_peaks_dist)]
@@ -204,7 +204,7 @@ class PhysioNet_dataset_processing():
 
 
         for i, dataset in enumerate(dataset_folder_list):
-            print(dataset)
+            print("Signal in process: ", dataset)
             raw_dataset_folder = raw_data_folder +  dataset + "/"
             modified_dataset_folder = modified_data_folder + dataset + "/"
 
@@ -390,14 +390,11 @@ class PhysioNet_dataset_processing():
 
 
 
-
-
-orig_data_folder = "./data/data_BIDMC_H_Signals/"
-raw_data_folder = "./data/data_BIDMC_H/raw/"
-modified_data_folder = "./data/data_BIDMC_H/modified/"
-result_data_folder = "./data/results_BIDMC_H/"
-img_data_folder = "./data/img_BIDMC_H/"
-
+orig_data_folder = "./data/data_BIDMC_Resp_Signals/"
+raw_data_folder = "./data/data_BIDMC_Resp_600/raw/"
+modified_data_folder = "./data/data_BIDMC_Resp_600/modified/"
+result_data_folder = "./data/results_BIDMC_Resp/"
+img_data_folder = "./data/img_BIDMC_Resp/"
 
 parameter_dict = {
     'time_warping_window': 0.25,
@@ -409,18 +406,19 @@ parameter_dict = {
 PhysioNet_dataset_processor = PhysioNet_dataset_processing()
 
 
-PhysioNet_dataset_processor.reformat_original_dataset(root_data_folder=orig_data_folder, save_data_folder=raw_data_folder)
+PhysioNet_dataset_processor.reformat_original_dataset(root_data_folder=orig_data_folder, save_data_folder=raw_data_folder, max_samples=600)
 PhysioNet_dataset_processor.modify_dataset_in_batch(raw_data_folder = raw_data_folder,
                                                     modified_data_folder = modified_data_folder,
                                                     parameter_dict= parameter_dict,
                                                     dataset_list = None)
 dataset_list = PhysioNet_dataset_processor.dataset_list
-print(dataset_list)
+print("Signals: ", dataset_list)
 
-distance_type='cityblock'##'euclidean'
+distance_type='cityblock'
+
 algorithm_list = ['Classic_DTW','Wave_DTW', 'Derivative_DTW', 'Wave_dDTW']
 
-#
+
 PhysioNet_dataset_processor.compare_signals_in_batch(
                                  raw_data_folder = raw_data_folder,
                                  modified_data_folder = modified_data_folder,

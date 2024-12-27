@@ -1,7 +1,7 @@
 import numpy as np
 
-from ClassicDTW import *
-from functions import *
+from src.ClassicDTW import *
+from src.functions import *
 from scipy.signal import hilbert
 
 

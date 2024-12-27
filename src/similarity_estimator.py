@@ -1,8 +1,8 @@
 from typing import List
 import numpy as np
-from WaveDTW import dtw_distance_wave
-from ClassicDTW import classic_dtw_distance
-from functions import *
+from src.WaveDTW import dtw_distance_wave
+from src.ClassicDTW import classic_dtw_distance
+from src.functions import *
 from scipy.stats import pearsonr, spearmanr
 from scipy.signal import resample
 
