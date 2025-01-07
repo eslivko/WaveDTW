@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from typing import List
 from src.functions import *
+import numpy as np
 
 
 
